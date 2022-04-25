@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.MongoTransactionManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.javers.repository.mongo.MongoRepository.mongoRepositoryWithDocumentDBCompatibility;
 
@@ -78,7 +79,7 @@ public class JaversMongoAutoConfiguration {
     public Javers javers() {
         logger.info("Starting javers-spring-boot-starter-mongo ...");
 
-        MongoDatabase mongoDatabase = initJaversMongoDatabase();
+        Supplier<MongoDatabase> mongoDatabase = initJaversMongoDatabase();
 
         MongoRepository javersRepository = createMongoRepository(mongoDatabase);
 
@@ -93,7 +94,7 @@ public class JaversMongoAutoConfiguration {
         return javersBuilder.build();
     }
 
-    private MongoRepository createMongoRepository(MongoDatabase mongoDatabase) {
+    private MongoRepository createMongoRepository(Supplier<MongoDatabase> mongoDatabase) {
         if (javersMongoProperties.isDocumentDbCompatibilityEnabled()) {
             logger.info("enabling Amazon DocumentDB compatibility");
             return mongoRepositoryWithDocumentDBCompatibility(mongoDatabase, javersMongoProperties.getSnapshotsCacheSize());
@@ -101,18 +102,18 @@ public class JaversMongoAutoConfiguration {
         return new MongoRepository(mongoDatabase, javersMongoProperties.getSnapshotsCacheSize());
     }
 
-    private MongoDatabase initJaversMongoDatabase() {
+    private Supplier<MongoDatabase> initJaversMongoDatabase() {
         if (!javersMongoProperties.isDedicatedMongodbConfigurationEnabled()) {
             MongoDatabase mongoDatabase = getDefaultMongoDatabase();
             logger.info("connecting Javers to primary Mongo database '{}' configured in spring.data.mongodb properties",
                         mongoDatabase.getName());
-            return mongoDatabase;
+            return ()->getDefaultMongoDatabase();
         } else {
             MongoDatabase mongoDatabase = JaversDedicatedMongoFactory
                     .createMongoDatabase(javersMongoProperties, mongoClientSettings);
             logger.info("connecting Javers to dedicated Mongo database '{}' configured in javers.mongodb properties",
                     mongoDatabase.getName());
-            return mongoDatabase;
+                return ()->mongoDatabase;
         }
     }
 

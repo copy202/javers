@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.javers.repository.mongo.MongoDialect.DOCUMENT_DB;
 import static org.javers.repository.mongo.MongoDialect.MONGO_DB;
@@ -37,10 +38,10 @@ public class MongoSchemaManager {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSchemaManager.class);
 
-    private final MongoDatabase mongo;
+    private final Supplier<MongoDatabase> mongo;
     private final String snapshotCollectionName;
 
-    MongoSchemaManager(MongoDatabase mongo, String snapshotCollectionName) {
+    MongoSchemaManager(Supplier<MongoDatabase> mongo, String snapshotCollectionName) {
         this.mongo = mongo;
         this.snapshotCollectionName = snapshotCollectionName;
     }
@@ -83,17 +84,17 @@ public class MongoSchemaManager {
                                 "}"
                 );
 
-                Document ret = mongo.runCommand(update);
+                Document ret = mongo.get().runCommand(update);
                 logger.info("result: \n "+ ret.toJson());
             }
         }
     }
 
     MongoCollection<Document> snapshotsCollection() {
-        return mongo.getCollection(snapshotCollectionName);
+        return mongo.get().getCollection(snapshotCollectionName);
     }
 
     MongoCollection<Document> headCollection() {
-        return mongo.getCollection(MongoHeadId.COLLECTION_NAME);
+        return mongo.get().getCollection(MongoHeadId.COLLECTION_NAME);
     }
 }
