@@ -23,6 +23,7 @@ import org.javers.repository.api.*;
 import org.javers.repository.mongo.model.MongoHeadId;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.javers.common.collections.Lists.toImmutableList;
@@ -48,7 +49,7 @@ public class MongoRepository implements JaversRepository, ConfigurationAware {
     private final LatestSnapshotCache cache;
     private MongoDialect mongoDialect;
 
-    public MongoRepository(MongoDatabase mongo) {
+    public MongoRepository(Supplier<MongoDatabase> mongo) {
         this(mongo, mongoRepositoryConfiguration().build());
     }
 
@@ -61,7 +62,7 @@ public class MongoRepository implements JaversRepository, ConfigurationAware {
      *
      * See <a href="http://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html">functional differences</a>.
      */
-    public static MongoRepository mongoRepositoryWithDocumentDBCompatibility(MongoDatabase mongo, int cacheSize) {
+    public static MongoRepository mongoRepositoryWithDocumentDBCompatibility(Supplier<MongoDatabase> mongo, int cacheSize) {
         return new MongoRepository(mongo, mongoRepositoryConfiguration()
                 .withDialect(DOCUMENT_DB)
                 .withCacheSize(cacheSize).build());
@@ -70,17 +71,17 @@ public class MongoRepository implements JaversRepository, ConfigurationAware {
     /**
      * @param cacheSize Size of the latest snapshots cache, default is 5000. Set 0 to disable.
      */
-    public MongoRepository(MongoDatabase mongo, int cacheSize) {
+    public MongoRepository(Supplier<MongoDatabase> mongo, int cacheSize) {
         this(mongo, mongoRepositoryConfiguration().withCacheSize(cacheSize).build());
     }
 
-    MongoRepository(MongoDatabase mongo, int cacheSize, MongoDialect dialect) {
+    MongoRepository(Supplier<MongoDatabase> mongo, int cacheSize, MongoDialect dialect) {
         this(mongo, mongoRepositoryConfiguration()
                 .withDialect(dialect)
                 .withCacheSize(cacheSize).build());
     }
 
-    public MongoRepository(MongoDatabase mongo, MongoRepositoryConfiguration mongoRepositoryConfiguration) {
+    public MongoRepository(Supplier<MongoDatabase> mongo, MongoRepositoryConfiguration mongoRepositoryConfiguration) {
         Validate.argumentsAreNotNull(mongo);
         this.mongoDialect = mongoRepositoryConfiguration.getMongoDialect();
         this.mongoSchemaManager = new MongoSchemaManager(mongo, mongoRepositoryConfiguration.getSnapshotCollectionName());

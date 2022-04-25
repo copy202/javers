@@ -53,7 +53,7 @@ public class JaversSpringMongoApplicationConfigExample {
     @Bean
     public Javers javers() {
         return TransactionalMongoJaversBuilder.javers()
-                .registerJaversRepository(new MongoRepository(mongo()))
+                .registerJaversRepository(new MongoRepository(()->mongo()))
                 .withTxManager(mongoTransactionManager.orElse(null))
                 .build();
     }
